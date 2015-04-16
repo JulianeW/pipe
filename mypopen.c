@@ -71,3 +71,14 @@ FILE *mypopen (const char *p_cCommand, const char *p_cType)
 	return p_PipeEnd;
 } 
 
+int myplose(FILE *stream)
+{
+	/* The pclose() function waits for the associated process to terminate
+       and returns the exit status of the command as returned by wait4(2). 
+       wait4() can be used to select a specific child, or children, on which to wait.
+       If rusage is not NULL, the struct rusage to which it points will be
+       filled with accounting information about the child. */ 
+	pid_t wait4(pid_t pid, int *status, int options, struct rusage *rusage);
+	return pclose(stream);
+}
+
