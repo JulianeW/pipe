@@ -1,3 +1,4 @@
+/* JPW: Wieso wird das hier inkludiert? Was ist das? Unser Headerfile heißt mypopen.h */
 #include "mypopcl.h"
 
 /* TODO: mypclose: int mypclose(FILE *stream) */
