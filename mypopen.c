@@ -101,37 +101,71 @@ extern FILE *mypopen (const char * command, const char * type)
 /* The pclose() function waits for the associated process to terminate
        and returns the exit status of the command as returned by wait4(2). 
        wait4() can be used to select a specific child, or children, on which to wait.
-       If usage is not NULL, the struct rusage to which it points will be
+       If rusage is not NULL, the struct rusage to which it points will be
        filled with accounting information about the child. */ 
 
 int mypclose(FILE * stream)
 {
-	pid_t Variable1 = 0; /* Initialisierung der Variable für waitpid */
-	/* The pid_t data type represents process IDs.
-	You can get the process ID of a process by calling getpid.
-	The function getppid returns the process ID of the parent of the current process
-	(this is also known as the parent process ID). */
-	/* ist die pid_t Variable in popen dieselbe, die man hier braucht? */
+	pid_t waitpid_temp;
+	int status = 0;
 	
+	/* check if the passed pointer is empty */
 	if (stream == NULL)
 	{
-		errno = EINVAL; /*  Im Falle von mypopen() ist auch errno passend zu erhalten 
-		(falls ein System-Call einen Fehler meldet) bzw. direkt zu setzen (z.B. falls 
-		unerwartete/falsche Parameter übergeben werden ist EINVAL ein guter Wert dafür). */
-		
-		return -1; /* The pclose() function returns -1 if wait4(2) returns an error, 
-		or some other error is detected.
-		In the event of an error, these functions set errno to indicate the cause of the error.*/
+		errno = EINVAL;
+		return -1;
 	}
-	
-	if (pid == -1) /* JPW: TODO: Was ist das für eine Variable? */
+
+	if (global_pipe == NULL)
+	{
+		errno = ECHILD;
+		return -1;
+	}
+
+	if (stream != global_pipe)
+	{
+		errno = EINVAL;
+		return -1;
+	}
+
+
+
+	/* if fork() failed */
+	if (pid == -1)
 	{
         errno = ECHILD;
-        return (-1); /* If pclose() cannot obtain the child status, errno is set to ECHILD. */
-        }
+        return -1; /* If pclose() cannot obtain the child status, errno is set to ECHILD. */
+    }
 
-	pid_t wait4(pid_t pid, int *status, int options, struct rusage *rusage);
-	return pclose(stream);
+	if (fclose(stream) != 0)
+	{
+		pid = -1;
+		global_pipe = NULL;
+		return -1;
+	}
+
+
+	while ((waitpid_temp = waitpid(pid, &status, 0)) != pid)
+	{
+		if (waitpid_temp == -1)
+		{
+			if (errno == EINTR)
+			{
+				continue;
+			}
+
+			return -1;
+		}
+	}
+
+	pid = -1;
+
+	if (WIFEXITED(status))
+		return WEXITSTATUS(status);
+
+	errno = ECHILD;
+	return -1;
+
 }
 
 
