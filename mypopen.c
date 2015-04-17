@@ -8,7 +8,7 @@ FILE *mypopen(const char *command, const char *type) */
 
 /* Initialised with -1, because it is changed if fork() is successfull */
 static pid_t pid = -1;
-FILE * global_pipe = NULL;
+static FILE * global_pipe = NULL;
 
 extern FILE *mypopen (const char * command, const char * type)
 {
@@ -16,8 +16,13 @@ extern FILE *mypopen (const char * command, const char * type)
 	
 	/* CB: Is this to check if enough arguments have been passed? */
 	assert(argc == 2);
-	/* TODO: Müssen noch einbauen wenn popen zweimal ohne pclose aufgerufen wird */
 	
+	if(global_pipe != NULL)
+	{
+		errno = EAGAIN;
+		return NULL;
+	}
+
 	if (strlen(command) < 1 || (strcmp(type, "r") != 0 && strcmp(type, "w") != 0))
 		{
 		/* If the type argument is invalid and this is detected, the errno variable is set to EINVAL */
@@ -34,7 +39,8 @@ extern FILE *mypopen (const char * command, const char * type)
 		switch(pid=fork())
 		{ 
 			case -1: /* fork did not work if -1 is returned - close filedescriptors, as they are not needed anymore */
-				close(pipe_filedesc);
+				close(pipe_filedesc[0]);
+				close(pipe_filedesc[1]);
 				return NULL;
 				break;
 			case 0: /* Child mode */
@@ -51,7 +57,7 @@ extern FILE *mypopen (const char * command, const char * type)
 					return NULL;
 				}
 				/* richtige Fehlerbehandlung von EXECL ??? */
-				if ((execl("/bin/sh", "sh", "-c", command, NULL) == -1)
+				if ((execl("/bin/sh", "sh", "-c", command, NULL)) == -1)
 				{
 					return NULL;
 				}
@@ -62,12 +68,13 @@ extern FILE *mypopen (const char * command, const char * type)
 				break;
 		}
 	}
-	else if (strcmp(p_cType, "w") == 0) /* it is write mode */
+	else if (strcmp(type, "w") == 0) /* it is write mode */
 	{
 		switch(pid=fork())
 		{ 
 			case -1: /* Error */
-				close(pipe_fildesc);
+				close(pipe_filedesc[0]);
+				close(pipe_filedesc[1]);
 				return NULL;
 				break;
 			case 0: /* Child mode */
@@ -83,7 +90,7 @@ extern FILE *mypopen (const char * command, const char * type)
 				{
 					return NULL;
 				}
-				if ((execl("/bin/sh", "sh", "-c", command, NULL) == -1)
+				if ((execl("/bin/sh", "sh", "-c", command, NULL)) == -1)
 				{
 					return NULL;
 				}
@@ -110,7 +117,7 @@ int mypclose(FILE * stream)
 	int status = 0;
 	
 	/* check if the passed pointer is empty */
-	if (stream == NULL)
+	if (stream == NULL || stream != global_pipe)
 	{
 		errno = EINVAL;
 		return -1;
@@ -121,14 +128,6 @@ int mypclose(FILE * stream)
 		errno = ECHILD;
 		return -1;
 	}
-
-	if (stream != global_pipe)
-	{
-		errno = EINVAL;
-		return -1;
-	}
-
-
 
 	/* if fork() failed */
 	if (pid == -1)
