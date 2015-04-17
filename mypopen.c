@@ -50,7 +50,11 @@ extern FILE *mypopen (const char * command, const char * type)
 				if (close(pipe_filedesc[1]) == -1 || close(pipe_filedesc[0]) == -1) {
 					return NULL;
 				}
-				execl("/bin/sh", "sh", "-c", command, NULL);
+				/* richtige Fehlerbehandlung von EXECL ??? */
+				if ((execl("/bin/sh", "sh", "-c", command, NULL) == -1)
+				{
+					return NULL;
+				}
 				break;
 			default: /* Parent mode */
 				close(pipe_filedesc[1]);
@@ -67,35 +71,40 @@ extern FILE *mypopen (const char * command, const char * type)
 				return NULL;
 				break;
 			case 0: /* Child mode */
-				if (close(0) == -1) {
+				if (close(pipe_filedesc[1]) == -1)
+				{
 					return NULL;
 				}
-				if (dup2(Pipe_FileDesc[0], 0) == -1) {
+				if (dup2(pipe_filedesc[0], 0) == -1)
+				{
 					return NULL;
 				}
-				if (close(Pipe_FileDesc[1]) == -1 || close(Pipe_FileDesc[0]) == -1) {
+				if (close(pipe_filedesc[1]) == -1 || close(pipe_filedesc[0]) == -1)
+				{
 					return NULL;
 				}
-				execlp("/bin/sh", "sh", "-c", p_cCommand, NULL);
+				if ((execl("/bin/sh", "sh", "-c", command, NULL) == -1)
+				{
+					return NULL;
+				}
 				break;
 			default: /* Parent mode */
-							 close(Pipe_FileDesc[0]);
-							 p_PipeEnd = fdopen(Pipe_FileDesc[1], p_cType);
-							 break;
+				close(pipe_filedesc[0]);
+				global_pipe = fdopen(pipe_filedesc[1], type);
+				break;
 		}
 	}
 
-	return p_PipeEnd;
+	return global_pipe;
 } 
 
 /* The pclose() function waits for the associated process to terminate
        and returns the exit status of the command as returned by wait4(2). 
        wait4() can be used to select a specific child, or children, on which to wait.
-       If rusage is not NULL, the struct rusage to which it points will be
+       If usage is not NULL, the struct rusage to which it points will be
        filled with accounting information about the child. */ 
 
-/* JPW: TODO: Woher kommt der Parameter stream? Müssen wir den umbenennen? */
-extern int mypclose(FILE *stream)
+int mypclose(FILE * stream)
 {
 	pid_t Variable1 = 0; /* Initialisierung der Variable für waitpid */
 	/* The pid_t data type represents process IDs.
