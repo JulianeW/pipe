@@ -16,7 +16,7 @@
  * ------------------------------------------------------------- prototypes--
  */
  
-extern FILE *mypopen (const char *p_cCommand, const char *p_cType);
+extern FILE *mypopen (const char * command, const char * type);
 
-int pclose(FILE *stream);
+extern int pclose(FILE * stream);
 
