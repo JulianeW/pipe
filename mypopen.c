@@ -1,48 +1,61 @@
-/* JPW: Wieso wird das hier inkludiert? Was ist das? Unser Headerfile heißt mypopen.h */
-#include "mypopcl.h"
+
+#include "mypopen.h"
 
 /* TODO: mypclose: int mypclose(FILE *stream) */
 /* JPW: TODO: Überprüfen, ob popen nur einmal aufgerufen wurde */
 /* JPW: TODO: wieso andere Paramenter als im Original pope bzw der Vorlage von Petrovitsch? 
 FILE *mypopen(const char *command, const char *type) */
 
-/* JPW: TODO: Wieso wird das hier deklariert? */
-static pid_t pid;
+/* Initialised with -1, because it is changed if fork() is successfull */
+static pid_t pid = -1;
+FILE * global_pipe = NULL;
 
-extern FILE *mypopen (const char *p_cCommand, const char *p_cType) 
+extern FILE *mypopen (const char * command, const char * type)
 {
-	int Pipe_FileDesc[2];
-	FILE *p_PipeEnd = NULL;
+	int pipe_filedesc[2]; /* Pipe-Filedeskriptoren um festzustellen ob w oder r */
 	
+	/* CB: Is this to check if enough arguments have been passed? */
 	assert(argc == 2);
+	/* TODO: Müssen noch einbauen wenn popen zweimal ohne pclose aufgerufen wird */
 	
-	if (strlen(p_cCommand) < 1 || (strcmp(p_cType, "r") != 0 && strcmp(p_cType, "w") != 0)) return NULL;
+	if (strlen(command) < 1 || (strcmp(type, "r") != 0 && strcmp(type, "w") != 0))
+		{
+		/* If the type argument is invalid and this is detected, the errno variable is set to EINVAL */
+		errno = EINVAL;
+		return NULL;
+		}
 
-	if (pipe(Pipe_FileDesc) == -1) return NULL;
+	/* check if pipe() works, otherwise return NULL */
+	if (pipe(pipe_filedesc) == -1)
+		return NULL;
 
-	if (strcmp(p_cType, "r") == 0)  /* it is read mode */
+	if (strcmp(type, "r") == 0)  /* it is read mode */
 	{
 		switch(pid=fork())
 		{ 
-			case -1: /* Error */
-							 return NULL;
-							 break;
+			case -1: /* fork did not work if -1 is returned - close filedescriptors, as they are not needed anymore */
+				close(pipe_filedesc);
+				return NULL;
+				break;
 			case 0: /* Child mode */
-							if (close(0) == -1 || close(1) == -1) {
-								return NULL;
-							}
-							if (dup2(Pipe_FileDesc[1], 1) == -1) {
-								return NULL;
-							}
-							if (close(Pipe_FileDesc[1]) == -1 || close(Pipe_FileDesc[0]) == -1) {
-								return NULL;
-							}
-							execlp("/bin/sh", "sh", "-c", p_cCommand, NULL);
-							break;
+
+				if (close(pipe_filedesc[0]) == -1)
+				{
+					return NULL;
+				}
+				if (dup2(pipe_filedesc[1], 1) == -1)
+				{
+					return NULL;
+				}
+				if (close(pipe_filedesc[1]) == -1 || close(pipe_filedesc[0]) == -1) {
+					return NULL;
+				}
+				execl("/bin/sh", "sh", "-c", command, NULL);
+				break;
 			default: /* Parent mode */
-							close(Pipe_FileDesc[1]);
-							p_PipeEnd = fdopen(Pipe_FileDesc[0], p_cType);
-							break;
+				close(pipe_filedesc[1]);
+				global_pipe = fdopen(pipe_filedesc[0], type);
+				break;
 		}
 	}
 	else if (strcmp(p_cType, "w") == 0) /* it is write mode */
@@ -50,20 +63,21 @@ extern FILE *mypopen (const char *p_cCommand, const char *p_cType)
 		switch(pid=fork())
 		{ 
 			case -1: /* Error */
-							 return NULL;
-							 break;
+				close(pipe_fildesc);
+				return NULL;
+				break;
 			case 0: /* Child mode */
-							if (close(0) == -1) {
-								return NULL;
-							}
-							if (dup2(Pipe_FileDesc[0], 0) == -1) {
-								return NULL;
-							}
-							if (close(Pipe_FileDesc[1]) == -1 || close(Pipe_FileDesc[0]) == -1) {
-								return NULL;
-							}
-							execlp("/bin/sh", "sh", "-c", p_cCommand, NULL);
-							break;
+				if (close(0) == -1) {
+					return NULL;
+				}
+				if (dup2(Pipe_FileDesc[0], 0) == -1) {
+					return NULL;
+				}
+				if (close(Pipe_FileDesc[1]) == -1 || close(Pipe_FileDesc[0]) == -1) {
+					return NULL;
+				}
+				execlp("/bin/sh", "sh", "-c", p_cCommand, NULL);
+				break;
 			default: /* Parent mode */
 							 close(Pipe_FileDesc[0]);
 							 p_PipeEnd = fdopen(Pipe_FileDesc[1], p_cType);
