@@ -1,4 +1,19 @@
-OPTFLAGS        = -O3 -Wall -Werror -Wextra -Wstrict-prototypes -fno-common -pedantic -g
+##
+## @file Makefile
+## Betriebssysteme Makefile für mypopen.c
+## 
+## @authors: Claudia Baierl, Juliane Pi Winkler, René Elsner
+## @date: 17.04.2015
+## @version: 1.0
+##
+##
+
+##
+## ------------------------------------------------------------- variables --
+##
+
+
+OPTFLAGS        = -DDEBUG -O3 -Wall -Werror -Wextra -Wstrict-prototypes -fno-common -pedantic -g
 CC              = gcc
 MAKE            = make
 RM              = rm -f
@@ -7,18 +22,30 @@ CD              = cd
 MV              = mv
 GREP            = grep
 EXCLUDE_PATTERN = footrulewidth
-OBJECTS          = datei.o
+OBJECTS          = mypopen.o
+
+
+##
+## ----------------------------------------------------------------- rules --
+##
 
 %.o : %.c
         $(CC) $(OPTFLAGS) -o $@ -c $<
 
-all: datei
+##
+## --------------------------------------------------------------- targets --
+##
 
-myfind: $(OBJECTS)
-        $(CC) $(OPTFLAGS) -o $@ $^
+all: popentest test-pipe 
+
+popentest: $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $^ -lpopentest
+
+test-pipe: $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $^ -ltest-pipe
 
 clean:
-        $(RM) *.o *.h.gch datei
+        $(RM) *.o *.h.gch mypopen
 
 clean_doc:
         $(RM) -r doc/ html/ latex/
