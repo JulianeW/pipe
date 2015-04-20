@@ -52,32 +52,31 @@ extern FILE *mypopen (const char * command, const char * type)
 			case -1: /* fork did not work if -1 is returned - close filedescriptors, as they are not needed anymore */
 				close(pipe_filedesc[0]);
 				close(pipe_filedesc[1]);
-				global_pointer = NULL;
+				global_pipe = NULL;
 				return NULL;
 				break;
 			case 0: /* Child mode */
 
 				if (close(pipe_filedesc[0]) == -1)
 				{
-					return NULL;
+					exit(EXIT_FAILURE);
 				}
 				if (dup2(pipe_filedesc[1], 1) == -1)
 				{
-					return NULL;
+					exit(EXIT_FAILURE);
 				}
 				if (close(pipe_filedesc[1]) == -1 || close(pipe_filedesc[0]) == -1) {
-					return NULL;
+					exit(EXIT_FAILURE);
 				}
 				/* richtige Fehlerbehandlung von EXECL ??? */
-				if ((execl("/bin/sh", "sh", "-c", command, NULL)) == -1)
+				if ((execl("/bin/sh", "sh", "-c", command, (char *) NULL)) == -1)
 				{
-					return NULL;
+					exit(EXIT_FAILURE);
 				}
 				break;
 			default: /* Parent mode */
 				close(pipe_filedesc[1]);
 				global_pipe = fdopen(pipe_filedesc[0], type);
-				setbuf(global_pipe, NULL);
 				return global_pipe;
 				break;
 		}
@@ -89,30 +88,30 @@ extern FILE *mypopen (const char * command, const char * type)
 			case -1: /* Error */
 				close(pipe_filedesc[0]);
 				close(pipe_filedesc[1]);
-				return NULL;
+				global_pipe = NULL; 
+				exit(EXIT_FAILURE);
 				break;
 			case 0: /* Child mode */
 				if (close(pipe_filedesc[1]) == -1)
 				{
-					return NULL;
+					exit(EXIT_FAILURE);
 				}
 				if (dup2(pipe_filedesc[0], 0) == -1)
 				{
-					return NULL;
+					exit(EXIT_FAILURE);
 				}
 				if (close(pipe_filedesc[1]) == -1 || close(pipe_filedesc[0]) == -1)
 				{
-					return NULL;
+					exit(EXIT_FAILURE);
 				}
-				if ((execl("/bin/sh", "sh", "-c", command, NULL)) == -1)
+				if ((execl("/bin/sh", "sh", "-c", command, (char *) NULL)) == -1)
 				{
-					return NULL;
+					exit(EXIT_FAILURE);
 				}
 				break;
 			default: /* Parent mode */
 				close(pipe_filedesc[0]);
 				global_pipe = fdopen(pipe_filedesc[1], type);
-				setbuf(global_pipe, NULL);
 				return global_pipe;
 				break;
 		}
@@ -131,16 +130,16 @@ int mypclose(FILE * stream)
 	pid_t waitpid_temp;
 	int status = 0;
 	
+	if (global_pipe == NULL)
+	{
+		errno = ECHILD;
+		return -1;
+	}
+	
 	/* check if the passed pointer is empty */
 	if (stream == NULL || stream != global_pipe)
 	{
 		errno = EINVAL;
-		return -1;
-	}
-
-	if (global_pipe == NULL)
-	{
-		errno = ECHILD;
 		return -1;
 	}
 
@@ -149,7 +148,7 @@ int mypclose(FILE * stream)
 	{
         errno = ECHILD;
         return -1; /* If pclose() cannot obtain the child status, errno is set to ECHILD. */
-    }
+    	}
 
 	if (fclose(stream) != 0)
 	{
