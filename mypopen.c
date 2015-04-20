@@ -28,9 +28,6 @@ extern FILE *mypopen (const char * command, const char * type)
 {
 	int pipe_filedesc[2]; /* Pipe-Filedeskriptoren um festzustellen ob w oder r */
 	
-	/* CB: Is this to check if enough arguments have been passed? */
-	assert(argc == 2);
-	
 	if(global_pipe != NULL)
 	{
 		errno = EAGAIN;
@@ -55,6 +52,7 @@ extern FILE *mypopen (const char * command, const char * type)
 			case -1: /* fork did not work if -1 is returned - close filedescriptors, as they are not needed anymore */
 				close(pipe_filedesc[0]);
 				close(pipe_filedesc[1]);
+				global_pointer = NULL;
 				return NULL;
 				break;
 			case 0: /* Child mode */
@@ -79,6 +77,8 @@ extern FILE *mypopen (const char * command, const char * type)
 			default: /* Parent mode */
 				close(pipe_filedesc[1]);
 				global_pipe = fdopen(pipe_filedesc[0], type);
+				setbuf(global_pipe, NULL);
+				return global_pipe;
 				break;
 		}
 	}
@@ -112,11 +112,12 @@ extern FILE *mypopen (const char * command, const char * type)
 			default: /* Parent mode */
 				close(pipe_filedesc[0]);
 				global_pipe = fdopen(pipe_filedesc[1], type);
+				setbuf(global_pipe, NULL);
+				return global_pipe;
 				break;
 		}
 	}
 
-	return global_pipe;
 } 
 
 /* The pclose() function waits for the associated process to terminate
