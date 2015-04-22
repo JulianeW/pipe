@@ -43,11 +43,14 @@ extern FILE *mypopen (const char * command, const char * type)
 
 	/* check if pipe() works, otherwise return NULL */
 	if (pipe(pipe_filedesc) == -1)
+	{
 		return NULL;
-
+	}
+	
 	if (strcmp(type, "r") == 0)  /* it is read mode */
 	{
-		switch(pid=fork())
+		pid = fork();	
+		switch(pid)
 		{ 
 			case -1: /* fork did not work if -1 is returned - close filedescriptors, as they are not needed anymore */
 				close(pipe_filedesc[0]);
@@ -65,7 +68,8 @@ extern FILE *mypopen (const char * command, const char * type)
 				{
 					exit(EXIT_FAILURE);
 				}
-				if (close(pipe_filedesc[1]) == -1 || close(pipe_filedesc[0]) == -1) {
+				if (close(pipe_filedesc[1]) == -1) 
+				{
 					exit(EXIT_FAILURE);
 				}
 				/* richtige Fehlerbehandlung von EXECL ??? */
@@ -83,13 +87,14 @@ extern FILE *mypopen (const char * command, const char * type)
 	}
 	else if (strcmp(type, "w") == 0) /* it is write mode */
 	{
-		switch(pid=fork())
+		pid = fork();
+		switch(pid)
 		{ 
 			case -1: /* Error */
 				close(pipe_filedesc[0]);
 				close(pipe_filedesc[1]);
 				global_pipe = NULL; 
-				exit(EXIT_FAILURE);
+				return NULL;
 				break;
 			case 0: /* Child mode */
 				if (close(pipe_filedesc[1]) == -1)
@@ -100,7 +105,7 @@ extern FILE *mypopen (const char * command, const char * type)
 				{
 					exit(EXIT_FAILURE);
 				}
-				if (close(pipe_filedesc[1]) == -1 || close(pipe_filedesc[0]) == -1)
+				if (close(pipe_filedesc[0]) == -1)
 				{
 					exit(EXIT_FAILURE);
 				}
@@ -130,25 +135,25 @@ int mypclose(FILE * stream)
 	pid_t waitpid_temp;
 	int status = 0;
 	
-	if (global_pipe == NULL)
+	/* check if fork was successful and if passed pipe is ok */
+	if (global_pipe == NULL || pid == -1)
 	{
 		errno = ECHILD;
 		return -1;
 	}
 	
 	/* check if the passed pointer is empty */
-	if (stream == NULL || stream != global_pipe)
+	if (stream == NULL)
 	{
 		errno = EINVAL;
 		return -1;
 	}
 
-	/* if fork() failed */
-	if (pid == -1)
+	if (stream != global_pipe)
 	{
-        errno = ECHILD;
-        return -1; /* If pclose() cannot obtain the child status, errno is set to ECHILD. */
-    	}
+		errno = EINVAL;
+		return -1;
+	}
 
 	if (fclose(stream) != 0)
 	{
