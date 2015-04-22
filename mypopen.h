@@ -26,7 +26,7 @@
 #include <sys/types.h> /* wird für wait(4) gebraucht */
 #include <errno.h>
 #include <sys/wait.h> /* wird für wait(4) gebraucht */
-#include <assert.h>
+#include <fcntl.h>
 #include <sys/time.h> /* wird für wait(4) gebraucht */
 #include <sys/resource.h> /* wird für wait(4) gebraucht */
 
