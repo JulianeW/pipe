@@ -22,7 +22,7 @@
  * --------------------------------------------------------------- globals --
  */
 
-/* Initialised with -1, because it is changed if fork() is successfull */
+/* static pid_t pid is initialised with -1 because it is changed if fork() is successful */
 static pid_t pid = -1;
 static FILE * global_pipe = NULL;
 
@@ -47,20 +47,23 @@ static FILE * global_pipe = NULL;
 
 extern FILE *mypopen (const char * command, const char * type)
 {
-	int pipe_filedesc[2]; /* Pipe-Filedeskriptoren um festzustellen ob w oder r */
+	/* pipe file descriptors used to determine if w or r */
+	int pipe_filedesc[2]; 
 	
+	/* check if more than one pipe is open */ 
 	if (global_pipe != NULL)
 	{
 		errno = EAGAIN;
 		return NULL;
 	}
 
+	/* check if the correct type argument was entered */
 	if (strlen(command) < 1 || (strcmp(type, "r") != 0 && strcmp(type, "w") != 0))
-		{
+	{
 		/* If the type argument is invalid and this is detected, the errno variable is set to EINVAL */
 		errno = EINVAL;
 		return NULL;
-		}
+	}
 
 	/* check if pipe() works, otherwise return NULL */
 	if (pipe(pipe_filedesc) == -1)
@@ -68,19 +71,20 @@ extern FILE *mypopen (const char * command, const char * type)
 		return NULL;
 	}
 	
-	if (strcmp(type, "r") == 0)  /* it is read mode */
+	/* check type, if leads to read mode, else if to write mode */
+	if (strcmp(type, "r") == 0)
 	{
 		pid = fork();	
 		switch(pid)
 		{ 
-			case -1: /* fork did not work if -1 is returned - close filedescriptors, as they are not needed anymore */
+			case -1: /* fork did not work if -1 is returned */ 
+				/* close filedescriptors as they are not needed anymore */
 				close(pipe_filedesc[0]);
 				close(pipe_filedesc[1]);
 				global_pipe = NULL;
 				return NULL;
 				break;
 			case 0: /* Child mode */
-
 				if (close(pipe_filedesc[0]) == -1)
 				{
 					exit(EXIT_FAILURE);
@@ -93,7 +97,6 @@ extern FILE *mypopen (const char * command, const char * type)
 				{
 					exit(EXIT_FAILURE);
 				}
-				/* richtige Fehlerbehandlung von EXECL ??? */
 				if ((execl("/bin/sh", "sh", "-c", command, (char *) NULL)) == -1)
 				{
 					exit(EXIT_FAILURE);
@@ -106,12 +109,13 @@ extern FILE *mypopen (const char * command, const char * type)
 				break;
 		}
 	}
-	else if (strcmp(type, "w") == 0) /* it is write mode */
+	else if (strcmp(type, "w") == 0) 
 	{
 		pid = fork();
 		switch(pid)
 		{ 
-			case -1: /* Error */
+			case -1: /* fork did not work if -1 is returned */ 
+				/* close filedescriptors as they are not needed anymore */
 				close(pipe_filedesc[0]);
 				close(pipe_filedesc[1]);
 				global_pipe = NULL; 
@@ -142,7 +146,6 @@ extern FILE *mypopen (const char * command, const char * type)
 				break;
 		}
 	}
-
 } 
 
 /**
@@ -161,6 +164,7 @@ extern FILE *mypopen (const char * command, const char * type)
 
 int mypclose(FILE * stream)
 {
+	/* variables needed for waitpid */
 	pid_t waitpid_temp;
 	int status = 0;
 	
@@ -178,6 +182,7 @@ int mypclose(FILE * stream)
 		return -1;
 	}
 
+	/* check if the passed pointer is not the same as opened pipe */
 	if (stream != global_pipe)
 	{
 		errno = EINVAL;
@@ -191,7 +196,7 @@ int mypclose(FILE * stream)
 		return -1;
 	}
 
-
+	/* WAS WIRD HIER GETAN? */
 	while ((waitpid_temp = waitpid(pid, &status, 0)) != pid)
 	{
 		if (waitpid_temp == -1)
@@ -200,13 +205,13 @@ int mypclose(FILE * stream)
 			{
 				continue;
 			}
-
 			return -1;
 		}
 	}
 
 	pid = -1;
 
+	/* WAS WIRD HIER GETAN? */
 	if (WIFEXITED(status))
 	{
 		return WEXITSTATUS(status);
