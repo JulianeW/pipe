@@ -1,14 +1,14 @@
 /**
  * @file mypopen.h
- * Betriebssysteme MyPopen File
+ * Betriebssysteme Headerfile für mypopen
  * Beispiel 2
  *
  * @author Claudia Baierl ic14b003 <claudia.baierl@technikum-wien.at>
  * @author Rene Elsner ic14b016 <rene.elsner@technikum-wien.at>
- * @author Juliane Winkler ic14b059 <juliane.winkler@technikum-wien-at>
+ * @author Juliane Piñeiro Winkler ic14b059 <juliane.winkler@technikum-wien-at>
  * @date 2015/04/17
  *
- * @version 1
+ * @date 2014/04/23
  *
  */
 
