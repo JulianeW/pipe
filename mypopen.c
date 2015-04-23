@@ -150,20 +150,12 @@ extern FILE *mypopen (const char * command, const char * type)
  * Mypopen is a function that waits for the associated process to terminate
  *         and returns the exit status of the command as returned by wait.
  *
- * \param command   a pointer to a null-terminated string containing a shell command line
- * \param  type     a pointer to a null-terminated string which must contain
- *                   either the letter 'r' for reading or the letter 'w' for writing
+ * \param stream   
  *
- * \return NULL if the fork(2) or pipe(2) calls fail, or if it cannot allocate memory
- * \return pointer to an open stream on success
+ * \return -1 in case of error
+ * \return exit status of the command as returned by wait
  *
  */
-
-/* The pclose() function waits for the associated process to terminate
-       and returns the exit status of the command as returned by wait4(2). 
-       wait4() can be used to select a specific child, or children, on which to wait.
-       If rusage is not NULL, the struct rusage to which it points will be
-       filled with accounting information about the child. */ 
 
 int mypclose(FILE * stream)
 {
@@ -220,6 +212,3 @@ int mypclose(FILE * stream)
 	return -1;
 
 }
-
-
-
