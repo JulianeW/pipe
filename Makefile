@@ -1,7 +1,6 @@
 /**
  * @file Makefile
  * Betriebssysteme Makefile für mypopen.c
- * Beispiel 2
  *
  * @author Claudia Baierl ic14b003 <claudia.baierl@technikum-wien.at>
  * @author Rene Elsner ic14b016 <rene.elsner@technikum-wien.at>
