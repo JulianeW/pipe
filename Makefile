@@ -1,17 +1,20 @@
-##
-## @file Makefile
-## Betriebssysteme Makefile für mypopen.c
-## 
-## @authors: Claudia Baierl, Juliane Pi Winkler, René Elsner
-## @date: 17.04.2015
-## @version: 1.0
-##
-##
+/**
+ * @file Makefile
+ * Betriebssysteme Makefile für mypopen.c
+ * Beispiel 2
+ *
+ * @author Claudia Baierl ic14b003 <claudia.baierl@technikum-wien.at>
+ * @author Rene Elsner ic14b016 <rene.elsner@technikum-wien.at>
+ * @author Juliane Piñeiro Winkler ic14b059 <juliane.winkler@technikum-wien-at>
+ * @date 2014/04/23
+ *
+ * @version 1 
+ *
+ */
 
-##
-## ------------------------------------------------------------- variables --
-##
-
+/*
+ * -------------------------------------------------------------- variables --
+ */
 
 OPTFLAGS        = -DDEBUG -O3 -Wall -Werror -Wextra -Wstrict-prototypes -fno-common -pedantic -g
 CC              = gcc
@@ -24,17 +27,18 @@ GREP            = grep
 EXCLUDE_PATTERN = footrulewidth
 OBJECTS          = mypopen.o
 
-
-##
-## ----------------------------------------------------------------- rules --
-##
+/*
+ * -------------------------------------------------------------- rules --
+ */
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-##
-## --------------------------------------------------------------- targets --
-##
+
+/*
+ * -------------------------------------------------------------- targets --
+ */
+
 
 all: popentest test-pipe 
 
