@@ -5,7 +5,7 @@
  *
  * @author Claudia Baierl ic14b003 <claudia.baierl@technikum-wien.at>
  * @author Rene Elsner ic14b016 <rene.elsner@technikum-wien.at>
- * @author Juliane Piñeiro Winkler ic14b059 <juliane.winkler@technikum-wien-at>
+ * @author Juliane Piñeiro-Winkler ic14b059 <juliane.winkler@technikum-wien-at>
  * @date 2014/04/23
  *
  * @version 1 
