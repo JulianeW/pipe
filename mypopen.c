@@ -49,7 +49,7 @@ extern FILE *mypopen (const char * command, const char * type)
 {
 	int pipe_filedesc[2]; /* Pipe-Filedeskriptoren um festzustellen ob w oder r */
 	
-	if(global_pipe != NULL)
+	if (global_pipe != NULL)
 	{
 		errno = EAGAIN;
 		return NULL;
@@ -208,9 +208,10 @@ int mypclose(FILE * stream)
 	pid = -1;
 
 	if (WIFEXITED(status))
+	{
 		return WEXITSTATUS(status);
-
+	}
+		
 	errno = ECHILD;
 	return -1;
-
 }
