@@ -12,17 +12,36 @@
  *
  */
 
+/*
+ * -------------------------------------------------------------- includes --
+ */
 
 #include "mypopen.h"
 
-/* TODO: mypclose: int mypclose(FILE *stream) */
-/* JPW: TODO: Überprüfen, ob popen nur einmal aufgerufen wurde */
-/* JPW: TODO: wieso andere Paramenter als im Original pope bzw der Vorlage von Petrovitsch? 
-FILE *mypopen(const char *command, const char *type) */
+/*
+ * --------------------------------------------------------------- globals --
+ */
 
 /* Initialised with -1, because it is changed if fork() is successfull */
 static pid_t pid = -1;
 static FILE * global_pipe = NULL;
+
+/*
+ * ------------------------------------------------------------- functions --
+ */
+
+/**
+ *
+ * \brief function that opens a process by creating a pipe, forking, and invoking the shell.
+ *
+ * \param command   a pointer to a null-terminated string containing a shell command line
+ * \param  type     a pointer to a null-terminated string which must contain
+ *                   either the letter 'r' for reading or the letter 'w' for writing
+ *
+ * \return NULL if the fork(2) or pipe(2) calls fail, or if it cannot allocate memory
+ * \return pointer to an open stream on success
+ *
+ */
 
 extern FILE *mypopen (const char * command, const char * type)
 {
