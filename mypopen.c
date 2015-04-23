@@ -32,7 +32,9 @@ static FILE * global_pipe = NULL;
 
 /**
  *
- * \brief function that opens a process by creating a pipe, forking, and invoking the shell.
+ * \brief function to open a pipe
+ * 
+ * Mypopen is a function that opens a process by creating a pipe, forking, and invoking the shell.
  *
  * \param command   a pointer to a null-terminated string containing a shell command line
  * \param  type     a pointer to a null-terminated string which must contain
@@ -147,7 +149,7 @@ extern FILE *mypopen (const char * command, const char * type)
  *
  * \brief  function to close a pipe
  * 
- * Mypopen is a function that waits for the associated process to terminate
+ * Myclose is a function that waits for the associated process to terminate
  *         and returns the exit status of the command as returned by wait.
  *
  * \param stream   
